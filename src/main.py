@@ -53,8 +53,30 @@ class RealtimeFaceDetector:
         logger.info("Real-time Face Detection System Initialized")
         logger.info(f"Using device: {self.detector.get_device()}")
         logger.info(f"Detection model: {self.detector.get_model_name()}")
+        
+        # Ensure test_outputs directory exists
+        self.output_dir = Path("test_outputs")
+        self.output_dir.mkdir(exist_ok=True, parents=True)
 
-    def run_webcam(self):
+    def _get_next_output_filename(self, base_name: str = "detection_output") -> Path:
+        """
+        Get the next available output filename with auto-incrementing number.
+
+        Looks for existing files and returns the next available number.
+        For example: detection_output_1.jpg, detection_output_2.jpg, etc.
+
+        Args:
+            base_name: Base name for the output file (without extension)
+
+        Returns:
+            Path to the next available output file
+        """
+        counter = 1
+        while True:
+            filename = self.output_dir / f"{base_name}_{counter}.jpg"
+            if not filename.exists():
+                return filename
+            counter += 1
         """
         Run real-time face detection on webcam feed.
 
@@ -145,8 +167,8 @@ class RealtimeFaceDetector:
                 thickness=2,
             )
 
-            # Save output image
-            output_path = Path("detection_output.jpg")
+            # Save output image with auto-incrementing filename
+            output_path = self._get_next_output_filename("detection_output")
             cv2.imwrite(str(output_path), frame_output)
             logger.info(f"Output saved to: {output_path.absolute()}")
 
