@@ -102,6 +102,7 @@ realtime-face-detection-dl/
 ## File Organization Rules
 
 ### ✅ In Scope (Version Controlled)
+
 - **src/**: Core application code
 - **utils/**: Shared utility functions
 - **tests/**: Test files
@@ -111,28 +112,29 @@ realtime-face-detection-dl/
 - **Configuration**: requirements.txt, .gitignore, README.md
 
 ### ❌ Out of Scope (Ignored by Git)
+
 - **venv/, .venv/**: Virtual environments
 - **models/**: Downloaded pretrained models (too large)
 - **test_outputs/**: Generated test results
-- **__pycache__/**: Python bytecode
-- ***.log**: Log files
+- ****pycache**/**: Python bytecode
+- **\*.log**: Log files
 - **.vscode/, .idea/**: IDE configurations
 
 ---
 
 ## Component Overview
 
-| Component | Location | Purpose | Status |
-|-----------|----------|---------|--------|
-| **Main Application** | `src/main.py` | Entry point for webcam/image detection | ✅ Complete |
-| **MTCNN Detector** | `src/detector.py` | Face detection using MTCNN | ✅ Complete |
-| **Configuration** | `src/config.py` | Centralized settings | ✅ Complete |
-| **Performance Metrics** | `src/fps.py` | FPS and latency tracking | ✅ Complete |
-| **Video Utilities** | `utils/video.py` | Camera capture and display | ✅ Complete |
-| **Logging** | `utils/logger.py` | Logging infrastructure | ✅ Complete |
-| **System Tests** | `tests/test_webcam.py` | Full system verification | ✅ Complete |
-| **Component Tests** | `tests/test_components.py` | Unit component testing | ✅ Complete |
-| **Documentation** | `Docs/` | User guides and technical refs | ✅ Complete |
+| Component               | Location                   | Purpose                                | Status      |
+| ----------------------- | -------------------------- | -------------------------------------- | ----------- |
+| **Main Application**    | `src/main.py`              | Entry point for webcam/image detection | ✅ Complete |
+| **MTCNN Detector**      | `src/detector.py`          | Face detection using MTCNN             | ✅ Complete |
+| **Configuration**       | `src/config.py`            | Centralized settings                   | ✅ Complete |
+| **Performance Metrics** | `src/fps.py`               | FPS and latency tracking               | ✅ Complete |
+| **Video Utilities**     | `utils/video.py`           | Camera capture and display             | ✅ Complete |
+| **Logging**             | `utils/logger.py`          | Logging infrastructure                 | ✅ Complete |
+| **System Tests**        | `tests/test_webcam.py`     | Full system verification               | ✅ Complete |
+| **Component Tests**     | `tests/test_components.py` | Unit component testing                 | ✅ Complete |
+| **Documentation**       | `Docs/`                    | User guides and technical refs         | ✅ Complete |
 
 ---
 
@@ -183,6 +185,7 @@ Pillow==10.0.0              # Image processing
 ## Quick Start
 
 ### Installation
+
 ```bash
 # Create virtual environment
 python -m venv venv
@@ -194,6 +197,7 @@ pip install -r requirements.txt
 ```
 
 ### Run
+
 ```bash
 # Real-time webcam detection
 python src/main.py
@@ -206,6 +210,7 @@ python src/main.py --model dummy
 ```
 
 ### Test
+
 ```bash
 # All tests
 python tests/test_components.py
@@ -219,12 +224,11 @@ pytest tests/test_webcam.py -v
 
 ## Project Statistics
 
-| Metric | Value |
-|--------|-------|
-| Total Source Files | 8 |
-| Total Lines of Code | ~2000 |
-| Total Documentation | 2500+ lines |
-| Test Coverage | 6 components + 2 test suites |
-| Dependencies | 6 packages |
-| Python Version | 3.10+ |
-
+| Metric              | Value                        |
+| ------------------- | ---------------------------- |
+| Total Source Files  | 8                            |
+| Total Lines of Code | ~2000                        |
+| Total Documentation | 2500+ lines                  |
+| Test Coverage       | 6 components + 2 test suites |
+| Dependencies        | 6 packages                   |
+| Python Version      | 3.10+                        |
