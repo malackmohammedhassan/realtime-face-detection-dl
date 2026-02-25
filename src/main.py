@@ -329,9 +329,9 @@ def main():
     )
     parser.add_argument(
         "--model",
-        choices=["mtcnn", "dummy"],
+        choices=["mtcnn", "dummy", "scratch_cnn"],
         default="mtcnn",
-        help="Detection model to use",
+        help="Detection model to use (mtcnn, dummy, or scratch_cnn)",
     )
     parser.add_argument(
         "--image",

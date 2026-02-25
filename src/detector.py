@@ -53,6 +53,7 @@ import numpy as np
 from abc import ABC, abstractmethod
 import time
 import logging
+from pathlib import Path
 
 try:
     import torch
@@ -60,6 +61,12 @@ try:
     HAS_MTCNN = True
 except ImportError:
     HAS_MTCNN = False
+
+try:
+    import cv2
+    HAS_CV2 = True
+except ImportError:
+    HAS_CV2 = False
 
 
 logger = logging.getLogger(__name__)
@@ -244,6 +251,108 @@ class DummyDetector(BaseDetector):
         return []
 
 
+class ScratchCNNDetectorWrapper(BaseDetector):
+    """
+    Wrapper for scratch CNN face detector.
+    
+    Uses a lightweight from-scratch CNN trained on face vs non-face classification.
+    Employs sliding window approach for face localization.
+    
+    Architecture:
+        - 3 convolutional layers (32, 64, 128 filters)
+        - 2 fully connected layers
+        - Input: 64x64 RGB windows
+        - Output: Binary classification (face/non-face)
+    """
+    
+    def __init__(
+        self,
+        device: torch.device,
+        model_path: Optional[Path] = None,
+        confidence_threshold: float = 0.8,
+        window_stride: int = 16
+    ):
+        """
+        Initialize scratch CNN detector.
+        
+        Args:
+            device: torch.device to use
+            model_path: Path to trained model checkpoint. 
+                       If None, looks for models/scratch_cnn.pth
+            confidence_threshold: Confidence threshold for face detection (0-1)
+            window_stride: Stride for sliding window (smaller = more detections, slower)
+        
+        Raises:
+            RuntimeError: If model path doesn't exist or model fails to load
+        """
+        self.device = device
+        self.window_stride = window_stride
+        
+        # Auto-detect model path if not provided
+        if model_path is None:
+            model_path = Path(__file__).parent.parent / "models" / "scratch_cnn.pth"
+        else:
+            model_path = Path(model_path)
+        
+        if not model_path.exists():
+            raise RuntimeError(
+                f"Scratch CNN model not found at {model_path}. "
+                f"Please train first: python scripts/train_scratch_cnn.py"
+            )
+        
+        try:
+            # Import here to avoid circular imports
+            from scratch_cnn import ScratchCNNDetector as ScratchCNNInferenceModel
+            
+            self.detector = ScratchCNNInferenceModel(
+                model_path=model_path,
+                device=device,
+                confidence_threshold=confidence_threshold,
+                stride=window_stride
+            )
+            
+            logger.info(f"Scratch CNN model loaded from {model_path}")
+            logger.info(f"Using device: {device}")
+            
+        except Exception as e:
+            logger.error(f"Failed to load scratch CNN model: {e}")
+            raise RuntimeError(f"Scratch CNN initialization failed: {e}") from e
+    
+    def detect(
+        self, frame: np.ndarray, scale: float = 1.0
+    ) -> List[Tuple[float, float, float, float, float]]:
+        """
+        Detect faces using scratch CNN with sliding window.
+        
+        Args:
+            frame: Input frame in BGR format (from OpenCV)
+            scale: Frame scale for inference (0.5-1.0 for speed)
+        
+        Returns:
+            List of detections as (x, y, w, h, confidence) tuples
+        """
+        try:
+            # Detect using sliding window
+            detections_raw = self.detector.detect(frame, scale=scale)
+            
+            # Convert from (x1, y1, x2, y2, confidence) to (x, y, w, h, confidence)
+            detections = []
+            for det in detections_raw:
+                x1, y1, x2, y2 = det['box']
+                confidence = det['confidence']
+                
+                w = x2 - x1
+                h = y2 - y1
+                
+                detections.append((float(x1), float(y1), float(w), float(h), confidence))
+            
+            return detections
+        
+        except Exception as e:
+            logger.error(f"Scratch CNN detection error: {e}")
+            return []
+
+
 class FaceDetector:
     """
     Main face detector wrapper.
@@ -257,7 +366,7 @@ class FaceDetector:
         Initialize face detector.
 
         Args:
-            model_name: Name of detection model ("mtcnn" or "dummy")
+            model_name: Name of detection model ("mtcnn", "dummy", or "scratch_cnn")
             device: torch.device (cuda or cpu). If None, auto-detects.
 
         Raises:
@@ -275,8 +384,13 @@ class FaceDetector:
                 self.detector = MTCNNDetector(device=device)
             elif model_name == "dummy":
                 self.detector = DummyDetector()
+            elif model_name == "scratch_cnn":
+                self.detector = ScratchCNNDetectorWrapper(device=device)
             else:
-                raise ValueError(f"Model '{model_name}' not yet implemented.")
+                raise ValueError(
+                    f"Model '{model_name}' not supported. "
+                    f"Available models: 'mtcnn', 'dummy', 'scratch_cnn'"
+                )
 
             logger.info(f"Face detector '{model_name}' initialized on {device}")
 
